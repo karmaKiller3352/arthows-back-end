@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { ArticlesService } from './articles.service';
 import { ArticlesController } from './articles.controller';
-import { Article, ArticleSchema } from './schemas/article.schema';
+import { Article, ArticleSchema } from './article.schema';
 
 @Module({
   providers: [ArticlesService],

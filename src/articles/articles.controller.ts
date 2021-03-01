@@ -7,9 +7,8 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { CreateArticleDto } from './dto/create-article.dto';
-import { UpdateArticleDto } from './dto/update-article.dto';
-import { Article } from './schemas/article.schema';
+import { CreateArticleDto, UpdateArticleDto } from './article.dto';
+import { Article } from './article.schema';
 import { ArticlesService } from './articles.service';
 
 @Controller('articles')
