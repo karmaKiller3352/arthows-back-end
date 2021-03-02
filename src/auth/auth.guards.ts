@@ -1,3 +1,4 @@
+import { roles as rolesArr } from '../users/enums/roles.enum';
 import {
   Injectable,
   CanActivate,
@@ -33,7 +34,17 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user: User = request.user;
 
-    const savedUser: User = await this.userService.findByEmail(user.email);
-    return savedUser && roles.includes(savedUser.role);
+    const savedUser = await this.userService.findByEmail(user.email);
+    if (!savedUser) return false;
+
+    if (savedUser.role === rolesArr.Admin) return true;
+
+    // add check just user can change own data
+    if (request.route.path === '/users/:id') {
+      const id = request?.params?.id;
+      return roles.includes(savedUser.role) && id == savedUser['_id'];
+    }
+
+    return roles.includes(savedUser.role);
   }
 }

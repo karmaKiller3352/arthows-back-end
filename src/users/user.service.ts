@@ -59,8 +59,13 @@ export class UserService {
     return this.userModel.findOneAndDelete({ _id: id });
   }
 
-  async updateById(id: string, updateUserDto: CreateUserDto): Promise<User> {
-    return this.userModel.findOneAndUpdate({ _id: id }, { ...updateUserDto });
+  async updateById(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = _.omit(updateUserDto, ['email', 'password', 'role']);
+    return await this.userModel.findOneAndUpdate(
+      { _id: id },
+      { ...user },
+      { new: true },
+    );
   }
 
   async login(user: User): Promise<any> {

@@ -13,35 +13,54 @@ import { messages } from '../locales/en';
 import { ArticleSchema } from '../articles/article.schema';
 import { UserSchema } from '../users/user.schema';
 
-const instamceMapper = {
-  CreateUserDto: {
-    name: 'User',
-    schema: UserSchema,
-  },
-  CreateArticleDto: {
-    name: 'Article',
-    schema: ArticleSchema,
-  },
-  UpdateArticleDto: {
-    name: 'Article',
-    schema: ArticleSchema,
-  },
-  CreateCategoryDto: {
-    name: 'Category',
-    schema: 'CategorySchema',
-  },
-};
+class SchemaFactory {
+  private Instance;
+  static list = {
+    CreateUserDto: {
+      name: 'User',
+      instance: UserSchema,
+    },
+    CreateArticleDto: {
+      name: 'Article',
+      instance: ArticleSchema,
+    },
+    UpdateArticleDto: {
+      name: 'Article',
+      instance: ArticleSchema,
+    },
+    CreateCategoryDto: {
+      name: 'Category',
+      instance: 'CategorySchema',
+    },
+  };
+
+  constructor(shema) {
+    const Instance = SchemaFactory.list[shema].instance;
+    const shemaName = SchemaFactory.list[shema].name;
+    const model = mongoose.model(shemaName, Instance);
+
+    this.Instance = model;
+  }
+
+  async connect(connection) {
+    await mongoose.connect(connection, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+  }
+  getInstance() {
+    return this.Instance;
+  }
+}
 
 @ValidatorConstraint({ async: true })
 export class IsAlreadyExistConstraint implements ValidatorConstraintInterface {
   async validate(email: string, args: ValidationArguments) {
     const { property, value, targetName } = args;
-    const { name, shema } = instamceMapper[targetName];
-    const model = mongoose.model(name, shema);
-    await mongoose.connect(process.env.DB_CONNECTION, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const db = new SchemaFactory(targetName);
+    await db.connect(process.env.DB_CONNECTION);
+
+    const model = db.getInstance();
 
     const user = await model.findOne({ [property]: value });
 

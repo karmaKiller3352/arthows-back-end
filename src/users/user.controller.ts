@@ -13,14 +13,14 @@ import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { User } from './user.schema';
 import { JwtAuthGuard, RolesGuard } from './../auth/auth.guards';
-import { hasRoles } from './../auth/auth.decorators';
+import { hasRoles } from '../auth/auth.decorators';
+import { roles } from './enums/roles.enum';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UserService) {}
 
-  @hasRoles('admin')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @Get()
   getAll(): Promise<User[]> {
     try {
@@ -30,28 +30,28 @@ export class UsersController {
     }
   }
 
-  @hasRoles('admin')
+  @hasRoles(roles.Admin)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post()
   create(@Body() createUserDto: CreateUserDto): Promise<User> {
     return this.userService.create(createUserDto);
   }
 
-  @hasRoles('admin')
+  @hasRoles(roles.Admin, roles.User)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get(':id')
   getOne(@Param('id') id: string): Promise<User> {
     return this.userService.getById(id);
   }
 
-  @hasRoles('admin')
+  @hasRoles(roles.Admin)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Delete(':id')
   remove(@Param('id') id: string): Promise<User> {
     return this.userService.removeById(id);
   }
 
-  @hasRoles('admin')
+  @hasRoles(roles.Admin, roles.User, roles.Moderator)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Put(':id')
   update(
