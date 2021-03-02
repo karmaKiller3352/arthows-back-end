@@ -17,9 +17,6 @@ export class ExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     let error = exception;
-    const status = exception.getStatus();
-    response.status(status || 400);
-
     if (exception instanceof mongoose.Error.CastError) {
       switch (exception.kind) {
         case 'ObjectId': {
@@ -32,6 +29,9 @@ export class ExceptionsFilter implements ExceptionFilter {
     if (exception instanceof mongoose.Error.ValidationError) {
       error = new BadRequestException(error.message);
     }
+
+    const status = exception.getStatus();
+    response.status(status || 400);
 
     response.json(error);
   }

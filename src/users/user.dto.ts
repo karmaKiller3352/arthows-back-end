@@ -6,6 +6,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
+import { ObjectId } from 'mongoose';
 
 export class CreateUserDto {
   @IsEmail()
