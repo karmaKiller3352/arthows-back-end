@@ -7,26 +7,24 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import * as _ from 'lodash';
+import { capitalize } from '../utils';
 
 import { messages } from '../locales/en';
-import { ArticleSchema } from '../articles/article.schema';
-import { UserSchema } from '../users/user.schema';
 
 class SchemaFactory {
   private Instance;
   static list = {
     CreateUserDto: {
       name: 'User',
-      instance: UserSchema,
+      instance: 'UserSchema',
     },
     CreateArticleDto: {
       name: 'Article',
-      instance: ArticleSchema,
+      instance: 'ArticleSchema',
     },
     UpdateArticleDto: {
       name: 'Article',
-      instance: ArticleSchema,
+      instance: 'ArticleSchema',
     },
     CreateCategoryDto: {
       name: 'Category',
@@ -71,7 +69,7 @@ export class IsAlreadyExistConstraint implements ValidatorConstraintInterface {
 
 export function IsValueAlreadyExist(validationOptions?: ValidationOptions) {
   return function (object: any, propertyName: string) {
-    const message = `${_.capitalize(propertyName)} $value ${
+    const message = `${capitalize(propertyName)} $value ${
       messages.errors.already
     }`;
 

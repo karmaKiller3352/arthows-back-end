@@ -1,4 +1,4 @@
-import { roles as rolesArr } from '../users/enums/roles.enum';
+import { roles as rolesArr } from '../users/user.enum';
 import {
   Injectable,
   CanActivate,
@@ -6,12 +6,10 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-
-import { User } from '../users/user.schema';
-import { UserService } from './../users/user.service';
+import { UsersService } from '../users/users.service';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {}
@@ -20,8 +18,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {}
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    @Inject(forwardRef(() => UserService))
-    private userService: UserService,
+    @Inject(forwardRef(() => UsersService))
+    private userService: UsersService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -34,7 +32,7 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user: User = request.user;
 
-    const savedUser = await this.userService.findByEmail(user.email);
+    const savedUser = await this.userService.findOneByEmail(user.email);
     if (!savedUser) return false;
 
     if (savedUser.role === rolesArr.Admin) return true;

@@ -1,26 +1,19 @@
-import { IsValueAlreadyExist } from 'src/validators/isAlreadyExist';
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   Length,
   Matches,
   MaxLength,
 } from 'class-validator';
-import { ObjectId } from 'mongoose';
 
 export class CreateUserDto {
   @IsEmail()
   @IsNotEmpty()
-  @MaxLength(20)
-  @IsValueAlreadyExist()
+  @MaxLength(50)
   readonly email: string;
-
-  readonly firstName: string;
-
-  readonly lastName: string;
-
+  readonly name: string;
   readonly role: string;
-
   @IsNotEmpty()
   @Length(8, 20, {
     message: 'Password must be at least 6 characters',
@@ -33,17 +26,11 @@ export class CreateUserDto {
 }
 
 export class UpdateUserDto {
-  @IsEmail()
-  @IsNotEmpty()
-  @MaxLength(20)
   readonly email: string;
-
-  readonly firstName: string;
-
-  readonly lastName: string;
-
+  readonly name: string;
   readonly role: string;
 
+  @IsOptional()
   @IsNotEmpty()
   @Length(8, 20, {
     message: 'Password must be at least 6 characters',

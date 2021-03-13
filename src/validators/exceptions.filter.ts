@@ -7,32 +7,29 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Response } from 'express';
-import * as _ from 'lodash';
+import * as R from 'ramda';
 
 import * as mongoose from 'mongoose';
 
 @Catch()
 export class ExceptionsFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
+    console.log(exception);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     let error = exception;
     if (exception instanceof mongoose.Error.CastError) {
-      switch (exception.kind) {
-        case 'ObjectId': {
-          error = new NotFoundException(messages.errors.id);
-          response.status(404);
-        }
-      }
+      error = new NotFoundException(messages.errors.id);
+      response.status(404);
     }
 
     if (exception instanceof mongoose.Error.ValidationError) {
       error = new BadRequestException(error.message);
     }
 
-    const status = exception.getStatus();
-    response.status(status || 400);
+    const status = R.prop('getStatus', exception) ? exception.getStatus() : 400;
 
+    response.status(status);
     response.json(error);
   }
 }
