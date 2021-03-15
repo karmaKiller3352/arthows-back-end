@@ -1,22 +1,25 @@
-import { UpdateUserDto } from './user.dto';
 import {
   Controller,
   HttpCode,
   Get,
   UseGuards,
   Param,
-  UnauthorizedException,
   NotFoundException,
   Delete,
   Put,
   Body,
-  NotImplementedException,
   BadRequestException,
+  Patch,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { roles } from './user.enum';
-import * as R from 'ramda';
 import { User } from './user.entity';
+import {
+  UpdateUserDto,
+  UpdateUserPasswordDto,
+  UpdateUserRole,
+} from './user.dto';
 import { JwtAuthGuard, RolesGuard } from '../auth/auth.guards';
 import { hasRoles } from '../auth/auth.decorators';
 
@@ -24,24 +27,23 @@ import { hasRoles } from '../auth/auth.decorators';
 export class UsersController {
   constructor(private userService: UsersService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @hasRoles(roles.Admin)
   @HttpCode(200)
   @Get()
-  async getList(): Promise<User[]> {
-    return await this.userService.getUsers();
+  async getList(@Query() query): Promise<User[]> {
+    return await this.userService.getUsers(query);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @HttpCode(200)
   @Get(':id')
   async getUser(@Param('id') id: number): Promise<User | Error> {
-    const user = await this.userService.findOneById(id);
+    try {
+      const user = await this.userService.findOneById(id);
 
-    if (R.isNil(user)) {
-      throw new NotFoundException('User not found');
+      return user;
+    } catch (error) {
+      throw new NotFoundException([error.message]);
     }
-    return user;
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -49,12 +51,12 @@ export class UsersController {
   @hasRoles(roles.Admin)
   @Delete(':id')
   async removeUser(@Param('id') id: number): Promise<User | Error> {
-    const user = await this.userService.removeById(id);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
+    try {
+      const user = await this.userService.removeById(id);
+      return user;
+    } catch (error) {
+      throw new NotFoundException([error.message]);
     }
-    return user;
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -64,16 +66,59 @@ export class UsersController {
   async updateUser(
     @Param('id') id: number,
     @Body() user: UpdateUserDto,
-  ): Promise<any | Error> {
-    const updatedUser = await this.userService.updateById(id, user);
-    const updatedCount = R.path([0], updatedUser);
-    if (updatedCount === 0) {
-      throw new BadRequestException('User was not updated');
-    }
+  ): Promise<any> {
+    try {
+      await this.userService.updateById(id, user);
 
-    return {
-      status: 'OK',
-      message: 'User was updated',
-    };
+      return {
+        status: 'OK',
+        message: 'User was updated',
+      };
+    } catch (error) {
+      throw new BadRequestException({
+        message: [error.message],
+      });
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(201)
+  @hasRoles(roles.User)
+  @Patch(':id/change_password')
+  async updatePassword(
+    @Param('id') id: number,
+    @Body() user: UpdateUserPasswordDto,
+  ): Promise<any> {
+    try {
+      await this.userService.updatePassword(user.oldPass, user.newPass, id);
+
+      return {
+        status: 'OK',
+        message: 'Password was updated',
+      };
+    } catch (error) {
+      throw new BadRequestException({
+        message: [error.message],
+      });
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(201)
+  @hasRoles(roles.Admin)
+  @Patch(':id/change_role')
+  async changeRole(@Param('id') id: number, @Body() user: UpdateUserRole) {
+    try {
+      await this.userService.updateRole(id, user.role);
+
+      return {
+        status: 'OK',
+        message: 'Role was updated',
+      };
+    } catch (error) {
+      throw new BadRequestException({
+        message: [error.message],
+      });
+    }
   }
 }

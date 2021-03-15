@@ -5,13 +5,14 @@ import {
   HttpCode,
   UnauthorizedException,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import * as R from 'ramda';
 import { CreateUserDto } from '../users/user.dto';
 import { User } from './../users/user.entity';
 import { AuthService } from './auth.service';
 
-import { DoesUserExist } from './../../core/guards/doesUserExist.guard';
+import { DoesUserExist } from '../../core/guards/doesUserExist.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -19,18 +20,23 @@ export class AuthController {
   @HttpCode(202)
   @Post('signin')
   async login(@Body() user: User) {
-    const checkedUser = await this.authService.login(user);
-
-    if (R.isNil(checkedUser.user)) {
-      throw new UnauthorizedException('Wrong credentilas');
+    try {
+      return await this.authService.login(user);
+    } catch (error) {
+      throw new UnauthorizedException(error.message);
     }
-    return await this.authService.login(user);
   }
 
   @UseGuards(DoesUserExist)
   @HttpCode(201)
   @Post('signup')
   async signUp(@Body() user: CreateUserDto) {
-    return await this.authService.create(user);
+    try {
+      return await this.authService.create(user);
+    } catch (error) {
+      throw new BadRequestException({
+        message: [error.message],
+      });
+    }
   }
 }

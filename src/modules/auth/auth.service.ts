@@ -1,3 +1,4 @@
+import { SERVICE_ERROR } from './../../core/errors/service.errors';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -13,9 +14,6 @@ export class AuthService {
   ) {}
   async validateUser(user) {
     const validUser = await this.userService.findOneByEmail(user.email);
-    if (!validUser) {
-      return null;
-    }
 
     const match = await this.comparePasswords(
       user.password,
@@ -23,11 +21,10 @@ export class AuthService {
     );
 
     if (!match) {
-      return null;
+      throw new Error(SERVICE_ERROR.USER.WRONG_CREDENTIALS);
     }
 
-    const { password, ...result } = R.path(['dataValues'], validUser);
-    return result;
+    return R.omit(['password'], R.path(['dataValues'], validUser));
   }
 
   public async login(user) {
@@ -40,10 +37,9 @@ export class AuthService {
     const pass = await this.hashPassword(user.password);
 
     const newUser = await this.userService.create({ ...user, password: pass });
-    const { password, ...result } = newUser['dataValues'];
 
-    const access_token = await this.generateJWT(result);
-    return { user: result, access_token };
+    const access_token = await this.generateJWT(newUser['dataValues']);
+    return { user: R.omit(['password'], newUser['dataValues']), access_token };
   }
 
   generateJWT(user: User): Promise<string> {

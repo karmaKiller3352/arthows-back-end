@@ -6,6 +6,7 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
+import * as R from 'ramda';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { UsersService } from '../users/users.service';
@@ -33,14 +34,16 @@ export class RolesGuard implements CanActivate {
     const user: User = request.user;
 
     const savedUser = await this.userService.findOneByEmail(user.email);
+
     if (!savedUser) return false;
 
     if (savedUser.role === rolesArr.Admin) return true;
 
+    const id = R.pathOr(false, ['params', 'id'], request);
+
     // add check just user can change own data
-    if (request.route.path === '/users/:id') {
-      const id = request?.params?.id;
-      return roles.includes(savedUser.role) && id == savedUser['_id'];
+    if (id) {
+      return roles.includes(savedUser.role) && id == savedUser.id;
     }
 
     return roles.includes(savedUser.role);
