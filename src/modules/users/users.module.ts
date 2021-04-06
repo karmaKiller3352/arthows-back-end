@@ -1,10 +1,14 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { FileService } from '../file/file.services';
+import { FileModule } from '../file/file.module';
+import { Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { usersProviders } from './users.providers';
 import { UsersController } from './users.controller';
+import { fileProviders } from '../file/file.providers';
 
 @Module({
-  providers: [UsersService, ...usersProviders],
+  imports: [FileModule],
+  providers: [UsersService, FileService, ...fileProviders, ...usersProviders],
   exports: [UsersService],
   controllers: [UsersController],
 })

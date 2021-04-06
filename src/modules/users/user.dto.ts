@@ -1,4 +1,5 @@
 import { roles } from './user.enum';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEnum,
@@ -10,11 +11,14 @@ import {
 } from 'class-validator';
 
 export class CreateUserDto {
+  @ApiProperty()
   @IsEmail()
   @IsNotEmpty()
   @MaxLength(50)
   readonly email: string;
+  @ApiProperty()
   readonly name: string;
+  @ApiProperty()
   readonly role: string;
   @IsNotEmpty()
   @Length(8, 20, {
@@ -24,15 +28,19 @@ export class CreateUserDto {
     message:
       'Password must have at least 1 uppercase, 1 lowercase letter and 1 number',
   })
+  @ApiProperty()
   readonly password: string;
-  readonly avatarUrl: string;
 }
 
 export class UpdateUserDto {
+  @ApiProperty()
   readonly email: string;
+  @ApiProperty()
   readonly name: string;
+  @ApiProperty()
   readonly role: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsNotEmpty()
   @Length(8, 20, {
@@ -43,12 +51,11 @@ export class UpdateUserDto {
       'Password must have at least 1 uppercase, 1 lowercase letter and 1 number',
   })
   readonly password: string;
-
-  readonly avatarUrl: string;
 }
 
 export class UpdateUserPasswordDto {
   @IsNotEmpty()
+  @ApiProperty()
   readonly oldPass: string;
 
   @IsNotEmpty()
@@ -59,10 +66,12 @@ export class UpdateUserPasswordDto {
     message:
       'Password must have at least 1 uppercase, 1 lowercase letter and 1 number',
   })
+  @ApiProperty()
   readonly newPass: string;
 }
 
 export class UpdateUserRole {
+  @ApiProperty({ enum: roles })
   @IsEnum(roles)
   role: string = roles.User;
 }

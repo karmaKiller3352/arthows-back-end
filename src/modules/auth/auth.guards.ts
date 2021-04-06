@@ -33,8 +33,12 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user: User = request.user;
 
-    const savedUser = await this.userService.findOneByEmail(user.email);
-
+    const savedUser = await this.userService.findEntityByField(
+      'email',
+      user.email,
+      [],
+      true,
+    );
     if (!savedUser) return false;
 
     if (savedUser.role === rolesArr.Admin) return true;

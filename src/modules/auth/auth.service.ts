@@ -1,8 +1,8 @@
-import { SERVICE_ERROR } from './../../core/errors/service.errors';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import * as R from 'ramda';
+import { ServiceError } from '@Core/errors/ServiceError';
+import { SERVICE_ERRORS } from '@Core/errors/service.errors';
 import { User } from '../users/user.entity';
 import { UsersService } from '../users/users.service';
 
@@ -12,34 +12,42 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
-  async validateUser(user) {
-    const validUser = await this.userService.findOneByEmail(user.email);
-
+  async validateUser(user: User): Promise<User> {
+    const validUser = await this.userService.findEntityByField(
+      'email',
+      user.email,
+    );
     const match = await this.comparePasswords(
       user.password,
       validUser.password,
     );
 
     if (!match) {
-      throw new Error(SERVICE_ERROR.USER.WRONG_CREDENTIALS);
+      throw new ServiceError(SERVICE_ERRORS.USER.WRONG_CREDENTIALS);
     }
 
-    return R.omit(['password'], R.path(['dataValues'], validUser));
+    return await this.userService.findEntityById(validUser.id, ['password']);
   }
 
-  public async login(user) {
+  public async login(user: User): Promise<any> {
     const validatedUser = await this.validateUser(user);
     const access_token = await this.generateJWT(user);
-    return { user: validatedUser, access_token };
+    return { validatedUser, access_token };
   }
 
-  public async create(user) {
+  public async create(user: any): Promise<any> {
     const pass = await this.hashPassword(user.password);
+    const newUser = await this.userService.createEntity({
+      ...user,
+      password: pass,
+    });
 
-    const newUser = await this.userService.create({ ...user, password: pass });
+    const createdUser = await this.userService.findEntityById(newUser.id, [
+      'password',
+    ]);
+    const access_token = await this.generateJWT(createdUser);
 
-    const access_token = await this.generateJWT(newUser['dataValues']);
-    return { user: R.omit(['password'], newUser['dataValues']), access_token };
+    return { createdUser, access_token };
   }
 
   generateJWT(user: User): Promise<string> {

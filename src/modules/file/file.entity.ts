@@ -1,24 +1,32 @@
-import { File } from '../file/file.entity';
+import { User } from '../users/user.entity';
+import { fileTypes } from './file.enums';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Table,
   Column,
   Model,
   DataType,
-  Default,
-  HasOne,
+  BelongsTo,
+  ForeignKey,
+  BelongsToAssociation,
 } from 'sequelize-typescript';
-import { roles } from './user.enum';
 
 @Table
-export class User extends Model<User> {
+export class File extends Model<File> {
   @ApiProperty()
-  @Default('')
   @Column({
     type: DataType.STRING,
-    allowNull: true,
+    unique: true,
+    allowNull: false,
   })
   name: string;
+  @ApiProperty()
+  @Column({
+    type: DataType.STRING,
+    unique: true,
+    allowNull: false,
+  })
+  path: string;
 
   @ApiProperty()
   @Column({
@@ -26,24 +34,20 @@ export class User extends Model<User> {
     unique: true,
     allowNull: false,
   })
-  email: string;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
-  password: string;
+  url: string;
 
   @ApiProperty()
-  @Default(roles.User)
   @Column({
     type: DataType.ENUM,
-    values: Object.values(roles),
+    values: Object.values(fileTypes),
     allowNull: false,
   })
-  role: string;
+  type: string;
 
   @ApiProperty()
-  @HasOne(() => File)
-  avatar: File;
+  @ForeignKey(() => User)
+  @Column
+  userId?: number;
+  @BelongsTo(() => User)
+  user: User;
 }
